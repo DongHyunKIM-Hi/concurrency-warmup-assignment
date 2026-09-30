@@ -1,0 +1,94 @@
+### 쿠폰 — S1: 정상 발급 후 사용 (가장 큰 할인 쿠폰이 적용되어야 함)
+POST http://localhost:8080/api/users/alice/coupons
+Content-Type: application/json
+
+{ "type": "WON_800" }
+
+###
+POST http://localhost:8080/api/users/alice/coupons
+Content-Type: application/json
+
+{ "type": "PERCENT_15" }
+
+###
+GET http://localhost:8080/api/users/alice/coupons
+
+###
+POST http://localhost:8080/api/users/alice/coupons/use
+Content-Type: application/json
+
+{ "amount": 10000 }
+
+### 쿠폰 — 잘못된 type (400 INVALID_REQUEST)
+POST http://localhost:8080/api/users/bob/coupons
+Content-Type: application/json
+
+{ "type": "NOT_A_TYPE" }
+
+### 쿠폰 — S4: 쿠폰이 없을 때 사용 (404 NO_COUPON_AVAILABLE)
+POST http://localhost:8080/api/users/nobody/coupons/use
+Content-Type: application/json
+
+{ "amount": 1000 }
+
+### 쿠폰 — amount가 0 이하 (400 INVALID_REQUEST)
+POST http://localhost:8080/api/users/alice/coupons/use
+Content-Type: application/json
+
+{ "amount": 0 }
+
+### -------------------------------------------------------------
+### 쿠폰 — S2, S3, S5는 동시 요청 시나리오라 curl/HTTP Client 하나로는
+### 재현하기 어렵습니다. 아래 셸 스크립트로 동시에 쏘아 보세요.
+###
+### S2 (쿠폰 2장, 동시 사용 2건 → 둘 다 200):
+###   curl -s -X POST localhost:8080/api/users/u2/coupons -H 'Content-Type: application/json' -d '{"type":"PERCENT_15"}'
+###   curl -s -X POST localhost:8080/api/users/u2/coupons -H 'Content-Type: application/json' -d '{"type":"WON_800"}'
+###   for i in 1 2; do curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8080/api/users/u2/coupons/use -H 'Content-Type: application/json' -d '{"amount":10000}' & done; wait
+###
+### S3 (쿠폰 1장, 동시 사용 5건 → 정확히 1건만 200, 나머지 404):
+###   curl -s -X POST localhost:8080/api/users/u3/coupons -H 'Content-Type: application/json' -d '{"type":"PERCENT_15"}'
+###   for i in 1 2 3 4 5; do curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8080/api/users/u3/coupons/use -H 'Content-Type: application/json' -d '{"amount":10000}' & done; wait
+### -------------------------------------------------------------
+
+### 예약 — S6: 정상 예약 (201)
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+
+{ "roomId": "R1", "userId": "U1", "from": "10:00", "to": "11:00" }
+
+### 예약 — S7: 같은 방, 겹치는 시간으로 순차 재요청 (409 TIME_CONFLICT)
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+
+{ "roomId": "R1", "userId": "U2", "from": "10:30", "to": "11:30" }
+
+### 예약 — S9: 경계만 맞닿음 (둘 다 201이어야 함)
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+
+{ "roomId": "R1", "userId": "U3", "from": "11:00", "to": "12:00" }
+
+### 예약 — 입력 오류: from >= to (400 INVALID_REQUEST)
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+
+{ "roomId": "R1", "userId": "U4", "from": "12:00", "to": "11:00" }
+
+### 예약 — 방별 조회
+GET http://localhost:8080/api/reservations/rooms/R1
+
+### 예약 — S11: 사용자별 조회 (그 사용자의 예약만, 방을 가리지 않고)
+GET http://localhost:8080/api/reservations/users/U1
+
+### -------------------------------------------------------------
+### 예약 — S8, S10은 동시 요청 시나리오입니다. 아래 셸 스크립트로 확인하세요.
+###
+### S8 (같은 방, 겹치는 시간 동시 5건 → 정확히 1건만 201, 나머지 409):
+###   for i in 1 2 3 4 5; do curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8080/api/reservations -H 'Content-Type: application/json' -d "{\"roomId\":\"R8\",\"userId\":\"U$i\",\"from\":\"09:00\",\"to\":\"10:00\"}" & done; wait
+###
+### S10 (다른 방, 같은 시간 동시 예약 → 둘 다 201):
+###   curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8080/api/reservations -H 'Content-Type: application/json' -d '{"roomId":"R10A","userId":"UA","from":"09:00","to":"10:00"}' &
+###   curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8080/api/reservations -H 'Content-Type: application/json' -d '{"roomId":"R10B","userId":"UB","from":"09:00","to":"10:00"}' &
+###   wait
+### -------------------------------------------------------------
