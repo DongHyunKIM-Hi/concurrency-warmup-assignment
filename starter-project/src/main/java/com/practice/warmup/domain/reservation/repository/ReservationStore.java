@@ -5,23 +5,26 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 이 클래스는 수정하지 않습니다.
  *
  * 회의실 예약을 <b>방 단위로만</b> 보관하는 인메모리 저장소입니다. 사용자별 인덱스는
  * 따로 없으므로, 사용자별 조회가 필요하면 {@link #findAll()}로 모든 방을 훑어야 합니다.
+ * 내부 맵은 {@link ConcurrentHashMap}이라 서로 다른 방을 동시에 건드려도 호출 하나하나는
+ * 안전합니다.
  *
- * 쿠폰 저장소와 달리 호출 지연은 없습니다. 지연이 없어도 "겹침을 확인하고 저장하는"
- * 두 단계 사이에는 여전히 다른 요청이 끼어들 수 있다는 점을 눈여겨보세요.
+ * 다만 "겹침을 확인하고 저장하는" 두 단계처럼 <b>여러 번의 호출을 하나의 흐름으로 묶어야
+ * 하는 경우</b>, 그 사이에 같은 방의 다른 요청이 끼어들 수 있다는 점은 여전합니다. 그 부분은
+ * 여러분이 막아야 합니다.
  */
 @Component
 public class ReservationStore {
 
-    private final Map<String, List<Reservation>> byRoom = new HashMap<>();
+    private final Map<String, List<Reservation>> byRoom = new ConcurrentHashMap<>();
 
     /** 방에 예약 1건을 추가합니다. */
     public void save(String roomId, Reservation reservation) {

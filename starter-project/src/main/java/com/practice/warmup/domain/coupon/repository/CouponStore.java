@@ -5,17 +5,20 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * 이 클래스는 수정하지 않습니다.
  *
- * 사용자별 보유 쿠폰을 보관하는 인메모리 저장소입니다. 내부 자료구조는 평범한
- * {@link HashMap}/{@link ArrayList}로, 스레드 안전하지 않습니다. 여러 요청이 동시에
- * 이 저장소를 건드리면 여러분의 서비스 코드가 안전하게 막아 주어야 합니다.
+ * 사용자별 보유 쿠폰을 보관하는 인메모리 저장소입니다. 내부 맵은 {@link ConcurrentHashMap}이라
+ * 서로 다른 사용자가 동시에 저장소를 건드려도 호출 하나하나는 안전합니다.
+ *
+ * 다만 이것이 여러분의 서비스 코드가 할 일을 없애 주지는 않습니다. "보유 쿠폰 중 가장 좋은 것을
+ * 찾고 나서 그것만 지운다"처럼 <b>여러 번의 호출을 하나의 흐름으로 묶어야 하는 경우</b>, 그 사이에
+ * 같은 사용자의 다른 요청이 끼어들 수 있다는 점은 여전합니다. 그 부분은 여러분이 막아야 합니다.
  *
  * {@link #findByUserId(String)}는 저장소 내부의 리스트를 <b>그대로</b> 돌려줍니다
  * (호출할 때마다 복사본을 만들어 주지 않습니다). 이 리스트를 들고 있다가 나중에 쓰면
@@ -26,7 +29,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Component
 public class CouponStore {
 
-    private final Map<String, List<Coupon>> coupons = new HashMap<>();
+    private final Map<String, List<Coupon>> coupons = new ConcurrentHashMap<>();
 
     /** 사용자에게 쿠폰 1장을 추가합니다. */
     public void save(String userId, Coupon coupon) {
