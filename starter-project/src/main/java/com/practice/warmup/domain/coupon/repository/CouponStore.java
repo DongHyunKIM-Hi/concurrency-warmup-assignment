@@ -1,5 +1,6 @@
-package com.practice.warmup.coupon;
+package com.practice.warmup.domain.coupon.repository;
 
+import com.practice.warmup.common.entity.Coupon;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -48,7 +49,7 @@ public class CouponStore {
         delay();
         List<Coupon> list = coupons.get(userId);
         if (list != null) {
-            list.removeIf(c -> c.id() == couponId);
+            list.removeIf(c -> c.getId() == couponId);
         }
     }
 

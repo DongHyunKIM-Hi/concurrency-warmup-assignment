@@ -1,9 +1,10 @@
-package com.practice.warmup.reservation;
+package com.practice.warmup.domain.reservation.controller;
 
-import com.practice.warmup.reservation.dto.CreateReservationRequest;
-import com.practice.warmup.reservation.dto.ReservationResponse;
-import com.practice.warmup.reservation.dto.RoomReservationView;
-import com.practice.warmup.reservation.dto.UserReservationView;
+import com.practice.warmup.domain.reservation.model.request.CreateReservationRequest;
+import com.practice.warmup.domain.reservation.model.response.ReservationResponse;
+import com.practice.warmup.domain.reservation.model.response.RoomReservationView;
+import com.practice.warmup.domain.reservation.model.response.UserReservationView;
+import com.practice.warmup.domain.reservation.repository.ReservationStore;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,7 +41,7 @@ public class ReservationController {
     @GetMapping("/rooms/{roomId}")
     public List<RoomReservationView> byRoom(@PathVariable String roomId) {
         return reservationStore.findByRoomId(roomId).stream()
-                .map(r -> new RoomReservationView(r.userId(), r.from().toString(), r.to().toString()))
+                .map(r -> new RoomReservationView(r.getUserId(), r.getFrom().toString(), r.getTo().toString()))
                 .toList();
     }
 

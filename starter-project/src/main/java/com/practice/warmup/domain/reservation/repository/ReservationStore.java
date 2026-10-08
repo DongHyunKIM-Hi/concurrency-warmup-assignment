@@ -1,5 +1,6 @@
-package com.practice.warmup.reservation;
+package com.practice.warmup.domain.reservation.repository;
 
+import com.practice.warmup.common.entity.Reservation;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

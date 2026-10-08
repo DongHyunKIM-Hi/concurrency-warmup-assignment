@@ -1,5 +1,6 @@
-package com.practice.warmup.common;
+package com.practice.warmup.common.exception;
 
+import com.practice.warmup.common.enums.ErrorCode;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +17,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ErrorResponse> handleApiException(ApiException e) {
-        return ResponseEntity.status(e.status()).body(ErrorResponse.of(e.code(), e.getMessage()));
+        return ResponseEntity.status(e.getStatus()).body(ErrorResponse.of(e.getCode(), e.getMessage()));
     }
 
     @ExceptionHandler({

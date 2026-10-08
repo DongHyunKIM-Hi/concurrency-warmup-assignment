@@ -1,9 +1,10 @@
-package com.practice.warmup.coupon;
+package com.practice.warmup.domain.coupon.controller;
 
-import com.practice.warmup.coupon.dto.CouponView;
-import com.practice.warmup.coupon.dto.IssueCouponRequest;
-import com.practice.warmup.coupon.dto.UseCouponRequest;
-import com.practice.warmup.coupon.dto.UseCouponResponse;
+import com.practice.warmup.domain.coupon.model.response.CouponView;
+import com.practice.warmup.domain.coupon.model.request.IssueCouponRequest;
+import com.practice.warmup.domain.coupon.model.request.UseCouponRequest;
+import com.practice.warmup.domain.coupon.model.response.UseCouponResponse;
+import com.practice.warmup.domain.coupon.repository.CouponStore;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,7 +38,7 @@ public class CouponController {
     @GetMapping
     public List<CouponView> list(@PathVariable String userId) {
         return couponStore.findByUserId(userId).stream()
-                .map(c -> new CouponView(c.id(), c.type().name()))
+                .map(c -> new CouponView(c.getId(), c.getType().name()))
                 .toList();
     }
 
