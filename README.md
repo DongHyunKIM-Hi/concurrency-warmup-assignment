@@ -85,28 +85,7 @@
 
 쿠폰과 회의실 예약은 서로 독립된 문제입니다. 한쪽을 풀지 못해도 다른 쪽 채점에는 영향이 없습니다. 아래 그림은 두 기능의 구조입니다.
 
-```mermaid
-flowchart LR
-    A["요청을 보내는 쪽<br/>(Swagger / curl)"]
-
-    subgraph COUPON["쿠폰 (독립)"]
-        B["쿠폰 컨트롤러<br/>발급, 사용 (TODO)"]
-        C[("쿠폰 저장소<br/>(수정 금지, 지연 있음)")]
-    end
-
-    subgraph ROOM["회의실 예약 (독립)"]
-        D["예약 컨트롤러<br/>생성, 사용자별 조회 (TODO)"]
-        E[("예약 저장소<br/>(수정 금지, 회의실 단위 저장)")]
-    end
-
-    A --> B --> C
-    A --> D --> E
-
-    style B fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
-    style D fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
-    style C fill:#e2e8f0,stroke:#64748b
-    style E fill:#e2e8f0,stroke:#64748b
-```
+![쿠폰과 회의실 예약 구조: 두 기능은 서로 독립되어 있고, 각 컨트롤러는 수정할 수 없는 저장소를 사용합니다](docs/images/warmup-architecture.svg)
 
 ## 3. 시작하기
 
