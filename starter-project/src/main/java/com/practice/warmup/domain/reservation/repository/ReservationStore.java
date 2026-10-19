@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * 다만 "겹침을 확인하고 저장하는" 두 단계처럼 <b>여러 번의 호출을 하나의 흐름으로 묶어야
  * 하는 경우</b>, 그 사이에 같은 방의 다른 요청이 끼어들 수 있다는 점은 여전합니다. 그 부분은
- * 여러분이 막아야 합니다.
+ * 서비스 코드에서 막아야 합니다.
  */
 @Component
 public class ReservationStore {

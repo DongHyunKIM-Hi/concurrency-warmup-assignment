@@ -4,7 +4,7 @@ import com.practice.warmup.common.enums.ErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-/** 에러 응답 공통 형식. 계약이므로 필드를 바꾸지 않습니다. */
+/** 에러 응답 공통 형식. API 명세의 일부이므로 필드를 바꾸지 않습니다. */
 @Getter
 @AllArgsConstructor
 public class ErrorResponse {

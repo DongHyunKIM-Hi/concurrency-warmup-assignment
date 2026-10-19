@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-/** 계약의 에러 응답 형식({@link ErrorResponse})으로 예외를 일관되게 변환합니다. */
+/** API 명세의 에러 응답 형식({@link ErrorResponse})으로 예외를 일관되게 변환합니다. */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 쿠폰 발급·조회·사용 API. 경로와 요청·응답 형식(계약)은 바꾸지 않습니다.
+ * 쿠폰 발급, 조회, 사용 API. 경로와 요청, 응답 형식은 바꾸지 않습니다.
  *
- * 발급과 사용은 아직 구현되어 있지 않습니다 ({@code TODO}). 가이드 5장을 읽고 구현하세요.
- * 필요한 만큼 서비스·도메인 클래스를 자유롭게 추가해도 됩니다.
+ * 발급과 사용은 아직 구현되어 있지 않습니다 ({@code TODO}). README 5장을 읽고 구현하세요.
+ * 필요한 만큼 서비스, 도메인 클래스를 자유롭게 추가해도 됩니다.
  */
 @RestController
 @RequestMapping("/api/users/{userId}/coupons")
@@ -51,7 +51,7 @@ public class CouponController {
         //  - 쓸 수 있는 쿠폰이 없으면 404 NO_COUPON_AVAILABLE
         //  - 고른 쿠폰은 사라져야 합니다 (couponStore.delete).
         //  - 같은 사용자에게 동시에 여러 사용 요청이 와도, 쿠폰 한 장이 두 번 쓰이면 안 됩니다.
-        //    (가이드 7장 시나리오 S2, S3 참고)
+        //    (README 7장 시나리오 S2, S3 참고)
         throw new UnsupportedOperationException("TODO: 쿠폰 사용을 구현하세요");
     }
 }
