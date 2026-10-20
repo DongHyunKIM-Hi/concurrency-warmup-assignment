@@ -1,4 +1,7 @@
-### 쿠폰 S1: 정상 발급 후 사용 (가장 큰 할인 쿠폰이 적용되어야 함)
+### 쿠폰과 회의실 예약 요청 예시 (IntelliJ HTTP Client 형식). 각 ### 블록 왼쪽의 초록색 화살표를 눌러 실행합니다.
+### 서버의 데이터는 메모리에만 있으므로, 처음부터 다시 실행하려면 서버를 재시작해 주세요.
+
+### 쿠폰 S1: WON_800, PERCENT_15 두 장을 발급한 뒤 10,000원으로 사용 (PERCENT_15가 적용되어 1,500원 할인, 최종 8,500원)
 POST http://localhost:8080/api/users/alice/coupons
 Content-Type: application/json
 
@@ -38,8 +41,8 @@ Content-Type: application/json
 { "amount": 0 }
 
 ### -------------------------------------------------------------
-### 쿠폰 S2, S3, S5는 동시 요청 시나리오라 curl/HTTP Client 하나로는
-### 재현하기 어렵습니다. 아래 셸 스크립트로 동시에 쏘아 보세요.
+### 쿠폰 S2, S3, S5는 요청을 동시에 보내야 하므로 이 파일로는 확인하기 어렵습니다.
+### 아래 줄에서 맨 앞의 ### 를 지우고 터미널에 붙여 넣어 실행하세요.
 ###
 ### S2 (쿠폰 2장, 동시 사용 2건: 둘 다 200):
 ###   curl -s -X POST localhost:8080/api/users/u2/coupons -H 'Content-Type: application/json' -d '{"type":"PERCENT_15"}'
@@ -49,6 +52,11 @@ Content-Type: application/json
 ### S3 (쿠폰 1장, 동시 사용 5건: 정확히 1건만 200, 나머지 404):
 ###   curl -s -X POST localhost:8080/api/users/u3/coupons -H 'Content-Type: application/json' -d '{"type":"PERCENT_15"}'
 ###   for i in 1 2 3 4 5; do curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8080/api/users/u3/coupons/use -H 'Content-Type: application/json' -d '{"amount":10000}' & done; wait
+###
+### S5 (서로 다른 사용자 2명이 동시에 사용: 둘 다 200, 걸린 시간이 1건 처리 시간과 비슷해야 함):
+###   curl -s -X POST localhost:8080/api/users/u5a/coupons -H 'Content-Type: application/json' -d '{"type":"PERCENT_15"}'
+###   curl -s -X POST localhost:8080/api/users/u5b/coupons -H 'Content-Type: application/json' -d '{"type":"PERCENT_15"}'
+###   time (for u in u5a u5b; do curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8080/api/users/$u/coupons/use -H 'Content-Type: application/json' -d '{"amount":10000}' & done; wait)
 ### -------------------------------------------------------------
 
 ### 예약 S6: 정상 예약 (201)
@@ -57,13 +65,13 @@ Content-Type: application/json
 
 { "roomId": "R1", "userId": "U1", "from": "10:00", "to": "11:00" }
 
-### 예약 S7: 같은 방, 겹치는 시간으로 순차 재요청 (409 TIME_CONFLICT)
+### 예약 S7: S6이 끝난 뒤, 같은 회의실(R1)에 시간이 겹치는 예약을 하나 더 요청 (409 TIME_CONFLICT)
 POST http://localhost:8080/api/reservations
 Content-Type: application/json
 
 { "roomId": "R1", "userId": "U2", "from": "10:30", "to": "11:30" }
 
-### 예약 S9: 경계만 맞닿음 (둘 다 201이어야 함)
+### 예약 S9: S6 예약(10:00~11:00)과 끝과 시작만 맞닿는 11:00~12:00 예약 (201). S6을 먼저 실행하세요.
 POST http://localhost:8080/api/reservations
 Content-Type: application/json
 
@@ -75,19 +83,19 @@ Content-Type: application/json
 
 { "roomId": "R1", "userId": "U4", "from": "12:00", "to": "11:00" }
 
-### 예약 방별 조회
+### 예약 회의실별 조회
 GET http://localhost:8080/api/reservations/rooms/R1
 
-### 예약 S11: 사용자별 조회 (그 사용자의 예약만, 방을 가리지 않고)
+### 예약 S11: 사용자별 조회 (회의실과 관계없이 그 사용자의 예약만)
 GET http://localhost:8080/api/reservations/users/U1
 
 ### -------------------------------------------------------------
-### 예약 S8, S10은 동시 요청 시나리오입니다. 아래 셸 스크립트로 확인하세요.
+### 예약 S8, S10은 요청을 동시에 보내야 합니다. 아래 줄에서 맨 앞의 ### 를 지우고 터미널에 붙여 넣어 실행하세요.
 ###
-### S8 (같은 방, 겹치는 시간 동시 5건: 정확히 1건만 201, 나머지 409):
+### S8 (같은 회의실, 겹치는 시간 동시 5건: 정확히 1건만 201, 나머지 409):
 ###   for i in 1 2 3 4 5; do curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8080/api/reservations -H 'Content-Type: application/json' -d "{\"roomId\":\"R8\",\"userId\":\"U$i\",\"from\":\"09:00\",\"to\":\"10:00\"}" & done; wait
 ###
-### S10 (다른 방, 같은 시간 동시 예약: 둘 다 201):
+### S10 (다른 회의실, 같은 시간 동시 예약: 둘 다 201):
 ###   curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8080/api/reservations -H 'Content-Type: application/json' -d '{"roomId":"R10A","userId":"UA","from":"09:00","to":"10:00"}' &
 ###   curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8080/api/reservations -H 'Content-Type: application/json' -d '{"roomId":"R10B","userId":"UB","from":"09:00","to":"10:00"}' &
 ###   wait

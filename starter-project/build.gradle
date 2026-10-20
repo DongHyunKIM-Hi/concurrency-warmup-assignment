@@ -6,7 +6,7 @@ plugins {
 
 group = 'com.practice.warmup'
 version = '0.0.1-SNAPSHOT'
-description = '과제 4. 쿠폰 사용과 회의실 예약 - 시작 프로젝트'
+description = '쿠폰 사용과 회의실 예약 시작 프로젝트'
 
 java {
 	toolchain {

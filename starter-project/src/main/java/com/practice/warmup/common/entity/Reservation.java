@@ -5,7 +5,7 @@ import lombok.Getter;
 
 import java.time.LocalTime;
 
-/** 이 클래스는 수정하지 않습니다. 예약 1건을 나타냅니다 (방 ID는 저장소가 키로 관리하므로 포함하지 않습니다). */
+/** 이 클래스는 수정하지 않습니다. 예약 1건을 나타냅니다 (회의실 ID는 저장소가 따로 보관하므로 포함하지 않습니다). */
 @Getter
 @AllArgsConstructor
 public class Reservation {
