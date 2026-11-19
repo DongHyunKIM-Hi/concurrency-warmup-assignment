@@ -1,0 +1,107 @@
+### 쿠폰과 회의실 예약 요청 예시 (IntelliJ HTTP Client 형식). 각 ### 블록 왼쪽의 초록색 화살표를 눌러 실행합니다.
+### 서버의 데이터는 메모리에만 있으므로, 처음부터 다시 실행하려면 서버를 재시작해 주세요.
+
+### 쿠폰 S1: WON_800, PERCENT_15 두 장을 발급한 뒤 10,000원으로 사용 (PERCENT_15가 적용되어 1,500원 할인, 최종 8,500원)
+POST http://localhost:8080/api/users/alice/coupons
+Content-Type: application/json
+
+{ "type": "WON_800" }
+
+###
+POST http://localhost:8080/api/users/alice/coupons
+Content-Type: application/json
+
+{ "type": "PERCENT_15" }
+
+###
+GET http://localhost:8080/api/users/alice/coupons
+
+###
+POST http://localhost:8080/api/users/alice/coupons/use
+Content-Type: application/json
+
+{ "amount": 10000 }
+
+### 쿠폰 잘못된 type (400 INVALID_REQUEST)
+POST http://localhost:8080/api/users/bob/coupons
+Content-Type: application/json
+
+{ "type": "NOT_A_TYPE" }
+
+### 쿠폰 S4: 쿠폰이 없을 때 사용 (404 NO_COUPON_AVAILABLE)
+POST http://localhost:8080/api/users/nobody/coupons/use
+Content-Type: application/json
+
+{ "amount": 1000 }
+
+### 쿠폰 amount가 0 이하 (400 INVALID_REQUEST)
+POST http://localhost:8080/api/users/alice/coupons/use
+Content-Type: application/json
+
+{ "amount": 0 }
+
+### -------------------------------------------------------------
+### 쿠폰 S2, S3, S5는 요청을 동시에 보내야 하므로 이 파일로는 확인하기 어렵습니다.
+### 아래 줄에서 맨 앞의 ### 를 지우고 터미널에 붙여 넣어 실행하세요.
+###
+### S2 (쿠폰 2장, 동시 사용 2건: 둘 다 200):
+###   curl -s -X POST localhost:8080/api/users/u2/coupons -H 'Content-Type: application/json' -d '{"type":"PERCENT_15"}'
+###   curl -s -X POST localhost:8080/api/users/u2/coupons -H 'Content-Type: application/json' -d '{"type":"WON_800"}'
+###   for i in 1 2; do curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8080/api/users/u2/coupons/use -H 'Content-Type: application/json' -d '{"amount":10000}' & done; wait
+###
+### S3 (쿠폰 1장, 동시 사용 5건: 정확히 1건만 200, 나머지 404):
+###   curl -s -X POST localhost:8080/api/users/u3/coupons -H 'Content-Type: application/json' -d '{"type":"PERCENT_15"}'
+###   for i in 1 2 3 4 5; do curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8080/api/users/u3/coupons/use -H 'Content-Type: application/json' -d '{"amount":10000}' & done; wait
+###
+### S5 (서로 다른 사용자 2명이 동시에 사용: 둘 다 200. 걸린 시간이 1건 처리 시간과 비슷하면 락 범위가 좁다는 뜻이고,
+###     전역 락이라 차례로 처리되어 느려도 결과만 맞으면 됩니다 — 락 범위는 코드로 따로 평가합니다):
+###   curl -s -X POST localhost:8080/api/users/u5a/coupons -H 'Content-Type: application/json' -d '{"type":"PERCENT_15"}'
+###   curl -s -X POST localhost:8080/api/users/u5b/coupons -H 'Content-Type: application/json' -d '{"type":"PERCENT_15"}'
+###   time (for u in u5a u5b; do curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8080/api/users/$u/coupons/use -H 'Content-Type: application/json' -d '{"amount":10000}' & done; wait)
+### -------------------------------------------------------------
+
+### 예약 S6: 정상 예약 (201)
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+
+{ "roomId": "R1", "userId": "U1", "from": "10:00", "to": "11:00" }
+
+### 예약 S7: S6이 끝난 뒤, 같은 회의실(R1)에 시간이 겹치는 예약을 하나 더 요청 (409 TIME_CONFLICT)
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+
+{ "roomId": "R1", "userId": "U2", "from": "10:30", "to": "11:30" }
+
+### 예약 S9: S6 예약(10:00~11:00)과 끝과 시작만 맞닿는 11:00~12:00 예약 (201). S6을 먼저 실행하세요.
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+
+{ "roomId": "R1", "userId": "U3", "from": "11:00", "to": "12:00" }
+
+### 예약 입력 오류: from >= to (400 INVALID_REQUEST)
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+
+{ "roomId": "R1", "userId": "U4", "from": "12:00", "to": "11:00" }
+
+### 예약 회의실별 조회
+GET http://localhost:8080/api/reservations/rooms/R1
+
+### 예약 S11: 사용자별 조회 (회의실과 관계없이 그 사용자의 예약만)
+GET http://localhost:8080/api/reservations/users/U1
+
+### -------------------------------------------------------------
+### 예약 S8, S10은 요청을 동시에 보내야 합니다. 아래 줄에서 맨 앞의 ### 를 지우고 터미널에 붙여 넣어 실행하세요.
+###
+### 예약은 메모리에 그대로 남습니다. 같은 명령을 다시 실행하면 앞서 만든 예약과 겹쳐
+### 전부 409가 나옵니다. 회의실 이름에 $RANDOM 을 붙여 두었으니 실행할 때마다 새 회의실이 쓰입니다.
+###
+### S8 (같은 회의실, 겹치는 시간 동시 5건: 정확히 1건만 201, 나머지 409):
+###   ROOM=R8-$RANDOM; for i in 1 2 3 4 5; do curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8080/api/reservations -H 'Content-Type: application/json' -d "{\"roomId\":\"$ROOM\",\"userId\":\"U$i\",\"from\":\"09:00\",\"to\":\"10:00\"}" & done; wait
+###
+### S10 (다른 회의실, 같은 시간 동시 예약: 둘 다 201):
+###   N=$RANDOM
+###   curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8080/api/reservations -H 'Content-Type: application/json' -d "{\"roomId\":\"R10A-$N\",\"userId\":\"UA\",\"from\":\"09:00\",\"to\":\"10:00\"}" &
+###   curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:8080/api/reservations -H 'Content-Type: application/json' -d "{\"roomId\":\"R10B-$N\",\"userId\":\"UB\",\"from\":\"09:00\",\"to\":\"10:00\"}" &
+###   wait
+### -------------------------------------------------------------
